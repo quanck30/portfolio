@@ -1,0 +1,104 @@
+/* --- Entrance Animations (Better Spring Feel) --- */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition:
+    opacity 1s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 1s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform, opacity;
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-item {
+  opacity: 0;
+  transform: scale(0.9) translateY(20px);
+  transition:
+    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform, opacity;
+}
+
+.reveal-item.active {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+/* --- Horizontal Slide Animation --- */
+.reveal-slide {
+  opacity: 0;
+  transform: translateX(-30px);
+  transition:
+    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.8s cubic-bezier(0.34, 1.2, 0.64, 1);
+  will-change: transform, opacity;
+}
+
+.reveal-slide.active {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* --- Card Styles & Hover Effects --- */
+.glass-card {
+  @apply bg-white border border-slate-100 rounded-2xl shadow-sm transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)];
+}
+
+.glass-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  @apply shadow-xl shadow-indigo-900/5 border-indigo-100;
+}
+
+/* Section Header Animation */
+.section-title {
+  position: relative;
+  display: inline-block;
+}
+
+.section-title::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: #1e3a8a;
+  transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: 0.5s;
+}
+
+.reveal.active .section-title::after {
+  width: 100%;
+}
+
+.toast {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+
+  background: #312e81;
+  color: white;
+
+  padding: 14px 20px;
+  border-radius: 12px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  opacity: 0;
+  transform: translateY(20px);
+
+  pointer-events: none;
+
+  transition: all 0.3s ease;
+
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
