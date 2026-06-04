@@ -1,100 +1,128 @@
-// Initialize Lucide icons
-if (window.lucide) {
-  window.lucide.createIcons();
-}
-
-// --- Mobile Menu Logic ---
+const header = document.getElementById("site-header");
 const menuToggle = document.getElementById("menu-toggle");
-const mobileMenu = document.getElementById("mobile-menu");
+const navLinks = document.getElementById("nav-links");
+const toast = document.getElementById("toast");
+const copyEmailButton = document.getElementById("copy-email");
+const contactForm = document.getElementById("contact-form");
+const submitButton = document.getElementById("submit-btn");
 
-if (menuToggle && mobileMenu) {
-  menuToggle.addEventListener("click", () => {
-    mobileMenu.classList.toggle("hidden");
-  });
-}
-
-// Close mobile menu on link click
-document.querySelectorAll(".mobile-link").forEach((link) => {
-  link.addEventListener("click", () => {
-    if (mobileMenu) mobileMenu.classList.add("hidden");
-  });
-});
-
-// --- Scroll Animation (Intersection Observer with Dynamic Stagger) ---
-const observerOptions = {
-  threshold: 0.15,
-  rootMargin: "0px 0px -50px 0px",
+const updateHeader = () => {
+  if (!header) return;
+  header.classList.toggle("is-scrolled", window.scrollY > 8);
 };
 
-const revealObserver = new IntersectionObserver((entries) => {
-  entries.forEach((entry) => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add("active");
+window.addEventListener("scroll", updateHeader, { passive: true });
+updateHeader();
 
-      // If this container has reveal-items or reveal-slide, stagger them
-      const items = entry.target.querySelectorAll(".reveal-item, .reveal-slide");
-      items.forEach((item, index) => {
-        setTimeout(() => {
-          item.classList.add("active");
-        }, index * 120); // Slightly slower stagger for better feel
-      });
-    }
+if (menuToggle && navLinks) {
+  menuToggle.addEventListener("click", () => {
+    const isOpen = navLinks.classList.toggle("is-open");
+    menuToggle.setAttribute("aria-expanded", String(isOpen));
   });
-}, observerOptions);
 
-// Register main containers to observe
-document.querySelectorAll(".reveal, section").forEach((el) => {
-  revealObserver.observe(el);
-});
+  navLinks.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", () => {
+      navLinks.classList.remove("is-open");
+      menuToggle.setAttribute("aria-expanded", "false");
+    });
+  });
+}
 
-// --- Language Toggle Logic ---
-const langBtn = document.getElementById("lang-toggle");
-if (langBtn) {
-  langBtn.addEventListener("click", () => {
-    const span = langBtn.querySelector("span");
-    if (span) {
-      span.textContent = span.textContent === "JA" ? "EN" : "JA";
+const revealObserver = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("is-visible");
+        revealObserver.unobserve(entry.target);
+      }
+    });
+  },
+  {
+    threshold: 0.12,
+    rootMargin: "0px 0px -40px 0px",
+  },
+);
+
+document.querySelectorAll(".reveal").forEach((element) => revealObserver.observe(element));
+
+const sections = [...document.querySelectorAll("main section[id]")];
+const desktopLinks = [...document.querySelectorAll(".nav-links a")];
+
+const activeSectionObserver = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+
+      desktopLinks.forEach((link) => {
+        link.classList.toggle("is-active", link.getAttribute("href") === `#${entry.target.id}`);
+      });
+    });
+  },
+  {
+    threshold: 0.45,
+  },
+);
+
+sections.forEach((section) => activeSectionObserver.observe(section));
+
+const showToast = (message) => {
+  if (!toast) return;
+
+  toast.textContent = message;
+  toast.classList.add("show");
+
+  window.setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2200);
+};
+
+if (copyEmailButton) {
+  copyEmailButton.addEventListener("click", async () => {
+    const email = copyEmailButton.dataset.email;
+
+    try {
+      await navigator.clipboard.writeText(email);
+      showToast("メールをコピーしました");
+    } catch {
+      showToast(email);
     }
   });
 }
 
-// --- Navbar Scroll Effect ---
-window.addEventListener("scroll", () => {
-  const navbar = document.getElementById("navbar");
-  if (navbar) {
-    if (window.scrollY > 50) {
-      navbar.classList.add("shadow-sm", "bg-white/95");
-      navbar.classList.remove("bg-white/80");
-    } else {
-      navbar.classList.remove("shadow-sm", "bg-white/95");
-      navbar.classList.add("bg-white/80");
+if (window.emailjs) {
+  window.emailjs.init("wIHQ4-0wzc9jcOmJD");
+}
+
+if (contactForm) {
+  contactForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    if (!window.emailjs) {
+      showToast("EmailJSの読み込み中です。もう一度お試しください");
+      return;
     }
-  }
-});
 
-emailjs.init("wIHQ4-0wzc9jcOmJD");
+    const defaultText = submitButton ? submitButton.textContent : "";
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = "送信中...";
+    }
 
-const form = document.getElementById("contact-form");
-
-form.addEventListener("submit", function (e) {
-  e.preventDefault();
-
-  emailjs
-    .sendForm("service_tvc3eqt", "template_ijet9b1", this)
-    .then(() => {
-      const toast = document.getElementById("toast");
-
-      toast.classList.add("show");
-
-      form.reset();
-
-      setTimeout(() => {
-        toast.classList.remove("show");
-      }, 3000);
-    })
-
-    .catch((error) => {
-      alert("送信失敗");
-      console.log(error);
-    });
-});
+    window.emailjs
+      .sendForm("service_tvc3eqt", "template_ijet9b1", contactForm)
+      .then(() => {
+        contactForm.reset();
+        showToast("メッセージを送信しました");
+      })
+      .catch((error) => {
+        console.error(error);
+        showToast("送信に失敗しました。時間をおいて再度お試しください");
+      })
+      .finally(() => {
+        if (submitButton) {
+          submitButton.disabled = false;
+          submitButton.textContent = defaultText;
+        }
+      });
+  });
+}
